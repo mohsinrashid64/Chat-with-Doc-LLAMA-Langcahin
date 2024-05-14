@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
+llama-2-7b-chat.gguf.q4_0.bin
+llama-2-7b-chat.ggmlv3.q8_0.bin
 # C extensions
 *.so
 
