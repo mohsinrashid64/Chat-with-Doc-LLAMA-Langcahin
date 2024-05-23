@@ -1,16 +1,17 @@
+import io
 from PyPDF2 import PdfReader
-from llama_index.core import Document
-from llama_index.core.node_parser import TokenTextSplitter
+from docx import Document as DocxDocument
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-async def get_chunks(files):
-    node_parser = TokenTextSplitter(chunk_size=256, chunk_overlap=128)
-    nodes = []
-    for file in files:
-        file_content = await file.read()
-        
-        nodes.extend(node_parser.get_nodes_from_documents([Document(text=file_content)], show_progress=False))
-    return nodes
 
+
+
+
+# async def get_file_extension(filename):
+#     if '.' in filename:
+#         return filename.rsplit('.', 1)[-1]
+#     else:
+#         return ""
 
 async def get_pdf_text(file):
     reader = PdfReader(file)
@@ -20,21 +21,41 @@ async def get_pdf_text(file):
     return extracted_text
 
 
-async def get_chunks_pdf(files):
-    node_parser = TokenTextSplitter(chunk_size=256, chunk_overlap=128)
-    nodes = []
+async def get_file_extension(filename):
+    if '.' in filename:
+        return filename.rsplit('.', 1)[-1]
+    else:
+        return ""
+
+async def get_chunks(files):
+    splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=20,separators='')
+    chunks = []
+    files_not_supported = []
+
     for file in files:
-        file_content = await get_pdf_text(file.file)
-        nodes.extend(node_parser.get_nodes_from_documents([Document(text=file_content, extra_info={'file_name':file.filename})], show_progress=False))
+        if file.filename.endswith('.txt'):
+            file_content = await file.read()
+            text = file_content.decode('utf-8')
+            chunks.extend(splitter.create_documents(texts=[text],metadatas=[{'file_name':file.filename}]))
 
-    return nodes
+        elif file.filename.endswith('.doc'):
+            file_content = await file.read()
+            print(file_content)
+            text = file_content.decode('utf-8')
+            chunks.extend(splitter.create_documents(texts=[text]))
+
+        elif file.filename.endswith('.docx'):
+            file_content = await file.read()
+            doc = DocxDocument(io.BytesIO(file_content))
+            text = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
+            chunks.extend(splitter.create_documents(texts=[text]))
+
+        elif file.filename.endswith('.pdf'):
+            text = await get_pdf_text(file.file)
+            chunks.extend(splitter.create_documents(texts=[text]))
+
+        else:
+            files_not_supported.append(get_file_extension(file.filename))
 
 
-def get_embeddings(vector_ids, index):
-    id_list = [d['id'] for d in vector_ids]
-    pine_cone_data = index.fetch(ids=id_list)
-    values = pine_cone_data.vectors.values()
-    values = list(values)
-    embeddings = [value.values for value in values]
-    
-    return embeddings
+    return chunks, files_not_supported
