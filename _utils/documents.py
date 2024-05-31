@@ -28,7 +28,7 @@ async def get_file_extension(filename):
         return ""
 
 async def get_chunks(files):
-    splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=20,separators='')
+    splitter = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=128,separators='')
     chunks = []
     files_not_supported = []
 
@@ -42,17 +42,17 @@ async def get_chunks(files):
             file_content = await file.read()
             print(file_content)
             text = file_content.decode('utf-8')
-            chunks.extend(splitter.create_documents(texts=[text]))
+            chunks.extend(splitter.create_documents(texts=[text],metadatas=[{'file_name':file.filename}]))
 
         elif file.filename.endswith('.docx'):
             file_content = await file.read()
             doc = DocxDocument(io.BytesIO(file_content))
             text = '\n'.join([paragraph.text for paragraph in doc.paragraphs])
-            chunks.extend(splitter.create_documents(texts=[text]))
+            chunks.extend(splitter.create_documents(texts=[text],metadatas=[{'file_name':file.filename}]))
 
         elif file.filename.endswith('.pdf'):
             text = await get_pdf_text(file.file)
-            chunks.extend(splitter.create_documents(texts=[text]))
+            chunks.extend(splitter.create_documents(texts=[text],metadatas=[{'file_name':file.filename}]))
 
         else:
             files_not_supported.append(get_file_extension(file.filename))
