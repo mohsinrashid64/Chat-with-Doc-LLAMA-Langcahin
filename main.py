@@ -20,6 +20,8 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.llms import Ollama
 
 
+
+
 load_dotenv() 
 pc = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
 
@@ -97,9 +99,12 @@ class Singleton:
         return cls._instances[user_id]
     
     def init(self, user_id, use_case_id):
+        print('X_INIT_TRIGGERED_X')
         self.user_id = user_id
         self.use_case_id = use_case_id
         self.conditions = []
+        self.store = {}
+
 
     def init_rag_chain(self, index_name: str):
         # Initialize RAG chain
@@ -148,8 +153,8 @@ class Singleton:
         )
 
     def get_rag_chain(self, index_name: str):
-        # if not hasattr(self, 'conversational_rag_chain'):
-        self.init_rag_chain(index_name)
+        if not hasattr(self, 'conversational_rag_chain'):
+            self.init_rag_chain(index_name)
         return self.conversational_rag_chain
 
 
