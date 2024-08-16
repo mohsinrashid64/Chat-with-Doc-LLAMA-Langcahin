@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import json
 
 def main():
     st.title('Chat with Document')
@@ -15,7 +16,7 @@ def main():
     if prompt:
         st.session_state['history'].append(("user", prompt))
         response = send_request(prompt, user_id, use_case_id)
-        response = response['answer']
+        # response = response['answer']
         st.session_state['history'].append(("ai", response))
 
 
@@ -26,11 +27,9 @@ def main():
 
 
 
+z
 
-def send_request(question, user_id, use_case_id):
-    url = f"http://127.0.0.1:8000/chat?question={question}&user_id={user_id}&use_case_id={use_case_id}"
-    response = requests.get(url)
-    return response.json()["message"]
+    return res['response']
 
 if __name__ == "__main__":
     main()
